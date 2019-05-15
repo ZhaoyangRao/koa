@@ -1,0 +1,180 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width">
+    <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
+    <!-- import Vue.js -->
+    <script src="//vuejs.org/js/vue.min.js"></script>
+    <!-- import stylesheet -->
+    <link rel="stylesheet" href="//unpkg.com/iview/dist/styles/iview.css">
+    <!-- import iView -->
+    <script src="//unpkg.com/iview/dist/iview.min.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <i-table :columns="columns1" :data="data1"></i-table>
+   <Modal
+        v-model="modal1"
+        title="user title"
+        @on-ok="ok"
+       >
+         name：<i-input v-model="upName"></i-input>
+        age<i-input v-model="upAge"></i-input>
+        address<i-input v-model="upAddress"></i-input>
+    </Modal>
+
+        name：<input v-model="name"/>
+        age<input v-model="age"/>
+        address<input v-model="address"/>
+
+
+        <i-button type="dashed" @click='add'>add</i-button>
+    </div>
+
+    <script type="text/javascript">
+        new Vue({
+            el: '#app',
+            data() {
+                return {
+                    modal1:false,
+                    columns1: [
+                        {
+                            title: 'Name',
+                            key: 'name'
+                        },
+                        {
+                            title: 'Age',
+                            key: 'age'
+                        },
+                        {
+                            title: 'Address',
+                            key: 'address'
+                        },
+                        {
+                            title: 'Action',
+                            key: 'action',
+                            width: 150,
+                            align: 'center',
+                            render: (h, params) => {
+                                return h('div', [
+                                    h('Button', {
+                                        props: {
+                                            type: 'primary',
+                                            size: 'small'
+                                        },
+                                        style: {
+                                            marginRight: '5px'
+                                        },
+                                        on: {
+                                            click: () => {
+                                                this.update(params)
+                                            }
+                                        }
+                                    }, 'View'),
+                                    h('Button', {
+                                        props: {
+                                            type: 'error',
+                                            size: 'small'
+                                        },
+                                        on: {
+                                            click: () => {
+                                                this.remove(params)
+                                            }
+                                        }
+                                    }, 'Delete')
+                                ]);
+                            }
+                        }
+                    ],
+                    data1: [],
+                    name: '默认',
+                    address: '默认',
+                    age: '默认',
+                    upName:'',
+                    upAge:'',
+                    upAddress:'',
+                    _id:''
+                }
+            },
+            created() {
+                this.find()
+            },
+            methods: {
+                find() {
+                    var that = this
+                    $.ajax({
+                        type: 'get',
+                        url: "http://localhost:3000/example/findExample",
+                        success: function(res) {
+                            that.data1 = res.data
+                        }
+                    });
+                },
+                add() {
+                    var that = this
+                    $.ajax({
+                        type: 'post',
+                        url: "http://localhost:3000/example/addExample",
+                        data: {
+                            name: that.name,
+                            address: that.address,
+                            age: that.age
+                        },
+                        success: function(res) {
+                            alert('success')
+                            that.find()
+                        }
+                    });
+                },
+                update(res) {
+                    console.log(res)
+                   this.modal1=true
+                    this.upName=res.row.name,
+                    this.upAge=res.row.age,
+                    this.upAddress=res.row.address
+                    this._id=res.row._id
+                },
+                remove(params) {
+                    console.log(params.row._id)
+                      var that = this
+                    $.ajax({
+                        type: 'post',
+                        url: "http://localhost:3000/example/removeExample",
+                        data: {
+                            _id:params.row._id
+                        },
+                        success: function(res) {
+                            alert('success')
+                            that.find()
+                        }
+                    });
+                },
+                 ok () {
+                    var that = this
+                    $.ajax({
+                        type: 'post',
+                        url: "http://localhost:3000/example/editedExample",
+                        data: {
+                          
+                            name:that.upName,
+                            age:that.upAge,
+                            address:that.upAddress,
+                              _id:that._id,
+                        },
+                        success: function(res) {
+                            this.modal1=false
+                            that.find()
+                        }
+                    });
+            },
+            cancel () {
+                this.$Message.info('Clicked cancel');
+            }
+            }
+        })
+    </script>
+</body></html>
